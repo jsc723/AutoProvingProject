@@ -16,10 +16,7 @@ deque<string> Lexer::tokenlize(char src[])
 	ifstream in(src);
 	stringstream ss;
 	string line;
-	regex atomReg("[A-Z][0-9]*");
-	regex cnctReg("\\^|v|(->)|(<->)");
-	regex paraReg("\\(|\\)");
-	regex allReg("([A-Z][0-9]*)|\\^|v|(->)|(<->)|\\(|\\)");
+	
 	deque<string> tokens;
 	
 	while (!in.eof()) {

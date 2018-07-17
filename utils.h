@@ -11,3 +11,5 @@ using namespace std;
 #define readNewLine(in, line, ss)\
 getline(in, line); \
 ss.clear();  ss.str(line);
+
+extern regex atomReg, cnctReg, paraReg, allReg;

@@ -10,7 +10,8 @@ getline(in, line); \
 ss.clear();  ss.str(line);
 
 int main(int argc, char *argv[]) {
-	Lexer::tokenlize("test.txt");
+	deque<string> tokens = Lexer::tokenlize("test.txt");
+	
 	system("pause");
 	return 0; 
 }

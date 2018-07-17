@@ -1,78 +1,105 @@
 #pragma once
 #include "utils.h"
-class Node {
+class TreeNode;
+class AtomNode;
+class UniOpNode;
+class NotNode;
+class BiOpNode;
+class AndOpNode;
+class OrOpNode;
+class IfOpNode;
+class EqOpNode;
+class TreeNode {
 public:
 	virtual string toString() = 0;
+	virtual bool eval() = 0;
 };
 
-class AtomNode : Node {
+class AtomNode : public TreeNode {
 public:
-	AtomNode(string value) {
-		this->value = value;
+	AtomNode(string symbol):TreeNode() {
+		this->symbol = symbol;
+		this->value = false;
 	}
 	string toString() {
-		return value;
+		return symbol;
 	}
-	string value;
+	bool eval() { return value; }
+	string symbol;
+	bool value;
 };
 
-class UniOpNode : Node {
+class UniOpNode : public TreeNode {
 public:
 	UniOpNode(AtomNode *child) : child(child) {};
 	string toString() {
-		return value + child->toString();
+		return symbol + child->toString();
 	}
 	AtomNode *child;
-	string value;
-	
+	string symbol;
 };
 
-class NotNode : UniOpNode {
+class NotNode : public UniOpNode {
 public:
 	NotNode(AtomNode *child) : UniOpNode(child) {
-		value = "!";
+		symbol = "!";
+	}
+	bool eval() {
+		return !child->eval();
 	}
 };
 
-class BiOpNode : Node {
+class BiOpNode : public TreeNode {
 public:
 	BiOpNode(AtomNode *left, AtomNode *right) {};
 	string toString() {
-		return "(" + left->toString() + ")" + value + "(" + right->toString() + ")";
+		return "(" + left->toString() + ")" + symbol + "(" + right->toString() + ")";
 	}
-	string value;
+	string symbol;
 	AtomNode *left, *right;
 };
 
-class AndOpNode : BiOpNode {
+class AndOpNode : public BiOpNode {
 public:
 	AndOpNode(AtomNode *left, AtomNode *right) :
 		BiOpNode(left, right) {
-		value = "^";
+		symbol = "^";
+	}
+	bool eval() {
+		return left->eval() && right->eval();
 	}
 };
 
-class OrOpNode : BiOpNode {
+class OrOpNode : public BiOpNode {
 public:
 	OrOpNode(AtomNode *left, AtomNode *right) :
 		BiOpNode(left, right) {
-		value = "v";
+		symbol = "v";
+	}
+	bool eval() {
+		return left->eval() || right->eval();
 	}
 };
 
-class IfOpNode : BiOpNode {
+class IfOpNode : public BiOpNode {
 public:
 	IfOpNode(AtomNode *left, AtomNode *right) :
 		BiOpNode(left, right) {
-		value = "->";
+		symbol = "->";
+	}
+	bool eval() {
+		return !(left->eval() && !right->eval());
 	}
 };
 
-class EqOpNode : BiOpNode {
+class EqOpNode : public BiOpNode {
 public:
 	EqOpNode(AtomNode *left, AtomNode *right) :
 		BiOpNode(left, right) {
-		value = "<->";
+		symbol = "<->";
+	}
+	bool eval() {
+		return left->eval() == right->eval();
 	}
 };
 
@@ -81,5 +108,6 @@ class Parser
 public:
 	Parser();
 	~Parser();
+	static TreeNode *parse(deque<string> &tokens);
 };
 
