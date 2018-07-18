@@ -31,17 +31,17 @@ public:
 
 class UniOpNode : public TreeNode {
 public:
-	UniOpNode(AtomNode *child) : child(child) {};
+	UniOpNode(TreeNode *child) : child(child) {};
 	string toString() {
 		return symbol + child->toString();
 	}
-	AtomNode *child;
+	TreeNode *child;
 	string symbol;
 };
 
 class NotNode : public UniOpNode {
 public:
-	NotNode(AtomNode *child) : UniOpNode(child) {
+	NotNode(TreeNode *child) : UniOpNode(child) {
 		symbol = "!";
 	}
 	bool eval() {
@@ -51,17 +51,18 @@ public:
 
 class BiOpNode : public TreeNode {
 public:
-	BiOpNode(AtomNode *left, AtomNode *right) {};
+	BiOpNode(TreeNode *left, TreeNode *right) :
+		left(left), right(right) {};
 	string toString() {
 		return "(" + left->toString() + ")" + symbol + "(" + right->toString() + ")";
 	}
 	string symbol;
-	AtomNode *left, *right;
+	TreeNode *left, *right;
 };
 
 class AndOpNode : public BiOpNode {
 public:
-	AndOpNode(AtomNode *left, AtomNode *right) :
+	AndOpNode(TreeNode *left, TreeNode *right) :
 		BiOpNode(left, right) {
 		symbol = "^";
 	}
@@ -72,7 +73,7 @@ public:
 
 class OrOpNode : public BiOpNode {
 public:
-	OrOpNode(AtomNode *left, AtomNode *right) :
+	OrOpNode(TreeNode *left, TreeNode *right) :
 		BiOpNode(left, right) {
 		symbol = "v";
 	}
@@ -83,7 +84,7 @@ public:
 
 class IfOpNode : public BiOpNode {
 public:
-	IfOpNode(AtomNode *left, AtomNode *right) :
+	IfOpNode(TreeNode *left, TreeNode *right) :
 		BiOpNode(left, right) {
 		symbol = "->";
 	}
@@ -94,7 +95,7 @@ public:
 
 class EqOpNode : public BiOpNode {
 public:
-	EqOpNode(AtomNode *left, AtomNode *right) :
+	EqOpNode(TreeNode *left, TreeNode *right) :
 		BiOpNode(left, right) {
 		symbol = "<->";
 	}
@@ -109,5 +110,8 @@ public:
 	Parser();
 	~Parser();
 	static TreeNode *parse(deque<string> &tokens);
+private:
+	static deque<string>::iterator nextArg(deque<string> &tokens, deque<string>::iterator it);
+	static void takeOutPara(deque<string> &tokens);
 };
 
