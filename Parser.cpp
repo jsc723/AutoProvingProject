@@ -33,8 +33,6 @@ TreeNode *Parser::parse(deque<string> &tokens) {
 			return NULL;
 		}
 	}
-	
-
 	auto third = nextArg(tokens, second);
 	if (third == end(tokens)) {
 		cout << "malformed formula" << endl;
@@ -102,4 +100,9 @@ void Parser::takeOutPara(deque<string>& tokens)
 	}
 	tokens.pop_front();
 	tokens.pop_back();
+}
+
+void TreeNode::assign(string symbol, bool value)
+{
+
 }
