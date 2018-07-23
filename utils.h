@@ -8,6 +8,7 @@
 #include <vector>
 #include <deque>
 #include <set>
+#include <typeinfo>
 using namespace std;
 #define readNewLine(in, line, ss)\
 getline(in, line); \

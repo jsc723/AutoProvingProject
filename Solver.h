@@ -1,6 +1,12 @@
 #pragma once
 #include "utils.h"
 #include "SyntaxTree.h"
+struct ProofLine {
+	set<int> dependence;
+	int lineNum;
+	TreeNode *formula;
+	string tag;
+};
 class Solver
 {
 public:
@@ -31,7 +37,7 @@ public:
 		}
 		return good;
 	}
-//private:
+private:
 	//return a^n
 	static unsigned int pow(int a, int n) {
 		unsigned int p = 1;
