@@ -13,6 +13,7 @@ struct ProofLine {
 	set<int> dependence;
 	int lineNum;
 	TreeNode *formula;
+	vector<int> args;
 	string tag;
 };
 class TreeNode {
@@ -23,8 +24,31 @@ public:
 	virtual void all_symbols(set<string> &symbols) = 0;
 	virtual bool equals(TreeNode *tree) = 0;
 	virtual bool contains(TreeNode *tree) = 0;
-	virtual bool pgen(vector<ProofLine> &proof, int start) = 0;
+	virtual bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) { return false; }
 	string type;
+	static void forward_and(vector<ProofLine> &proof) {
+		vector<ProofLine> adding;
+		bool find;
+		for (auto p : proof) {
+			for (auto q : proof) {
+				TreeNode *and = new AndOpNode(p.formula, q.formula);
+				find = false;
+				for (auto r : proof) {
+					if (r.formula->contains(and)) {
+						find = true;
+						ProofLine n;
+						n.dependence.insert(p.dependence.begin(), p.dependence.end());
+						n.dependence.insert(q.dependence.begin(), q.dependence.end());
+						adding.push_back(n);
+						break;
+					}
+				}
+				if (!find) delete and;
+			}
+		}
+		for (auto i : adding)
+			proof.push_back(i);
+	}
 };
 
 class AtomNode : public TreeNode {
@@ -56,10 +80,15 @@ public:
 		return equals(tree);
 	}
 	bool eval() { return value; }
-	bool pgen(vector<ProofLine> &proof, int start) {
+	bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) {
+		forward_and(proof);
 		for (int i = start; i < proof.size(); i++) {
-
+			if (proof[i].dependence.size() == 0 &&
+				this->equals(proof[i].formula)) {
+				return true;
+			}
 		}
+		return false;
 	}
 	string symbol;
 	bool value;
