@@ -2,6 +2,7 @@
 #include "utils.h"
 class TreeNode;
 class AtomNode;
+class AnyNode;
 class UniOpNode;
 class NotNode;
 class BiOpNode;
@@ -11,7 +12,7 @@ class IfOpNode;
 class EqOpNode;
 struct ProofLine {
 	set<int> dependence;
-	int lineNum;
+	//int lineNum;
 	TreeNode *formula;
 	vector<int> args;
 	string tag;
@@ -24,31 +25,19 @@ public:
 	virtual void all_symbols(set<string> &symbols) = 0;
 	virtual bool equals(TreeNode *tree) = 0;
 	virtual bool contains(TreeNode *tree) = 0;
-	virtual bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) { return false; }
-	string type;
-	static void forward_and(vector<ProofLine> &proof) {
-		vector<ProofLine> adding;
-		bool find;
+	virtual bool pgen(set<int> &dep, vector<ProofLine> &proof, int start);
+	bool helpful(vector<ProofLine> &proof) {
 		for (auto p : proof) {
-			for (auto q : proof) {
-				TreeNode *and = new AndOpNode(p.formula, q.formula);
-				find = false;
-				for (auto r : proof) {
-					if (r.formula->contains(and)) {
-						find = true;
-						ProofLine n;
-						n.dependence.insert(p.dependence.begin(), p.dependence.end());
-						n.dependence.insert(q.dependence.begin(), q.dependence.end());
-						adding.push_back(n);
-						break;
-					}
-				}
-				if (!find) delete and;
-			}
+			if (p.formula->contains(this))
+				return true;
 		}
-		for (auto i : adding)
-			proof.push_back(i);
+		return false;
 	}
+	string type;
+	static int find(set<int> dep_most, TreeNode *formula, vector<ProofLine> proof);
+	static bool is_subset(set<int> &a, set<int> &b);
+	static set<int> union_set(set<int> &a, set<int> &b);
+	
 };
 
 class AtomNode : public TreeNode {
@@ -81,17 +70,32 @@ public:
 	}
 	bool eval() { return value; }
 	bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) {
-		forward_and(proof);
-		for (int i = start; i < proof.size(); i++) {
-			if (proof[i].dependence.size() == 0 &&
-				this->equals(proof[i].formula)) {
-				return true;
-			}
+		if (this->TreeNode::pgen(dep, proof, start)) {
+			return true;
 		}
 		return false;
 	}
 	string symbol;
 	bool value;
+};
+
+class AnyNode : public TreeNode {
+public:
+	AnyNode() :TreeNode() {
+		this->type = "AnyNode";
+	}
+	string toString() {
+		return "*";
+	}
+	void assign(string symbol, bool value) { }
+	void all_symbols(set<string> &symbols) { }
+	bool equals(TreeNode *tree) {
+		return true;
+	}
+	bool contains(TreeNode *tree) {
+		return true;
+	}
+	bool eval() { return false; }
 };
 
 class UniOpNode : public TreeNode {
@@ -174,6 +178,24 @@ public:
 	}
 	bool eval() {
 		return left->eval() && right->eval();
+	}
+	bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) {
+		if (this->TreeNode::pgen(dep, proof, start)) {
+			return true;
+		}
+		int i = find(dep, left, proof);
+		int j = find(dep, right, proof);
+		if (i != -1 && j != -1) {
+			ProofLine p;
+			p.dependence = union_set(proof[i].dependence, proof[j].dependence);
+			p.formula = this;
+			p.args.push_back(i);
+			p.args.push_back(j);
+			p.tag = "^I";
+			proof.push_back(p);
+			return true;
+		}
+		return false;
 	}
 };
 
