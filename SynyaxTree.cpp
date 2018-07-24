@@ -18,7 +18,7 @@ bool TreeNode::is_subset(set<int> &a, set<int> &b)
 	return true;
 }
 
-set<int> TreeNode::set_union(set<int>& a, set<int>& b)
+set<int> TreeNode::union_set(set<int>& a, set<int>& b)
 {
 	set<int> c(begin(a), end(a));
 	c.insert(begin(b), end(b));
