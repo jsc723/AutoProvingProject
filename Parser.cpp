@@ -17,6 +17,9 @@ TreeNode *Parser::parse(deque<string> &tokens) {
 	takeOutPara(tokens);
 	if (tokens.size() == 0)
 		return NULL;
+	if (tokens.size() == 1 && regex_match(tokens[0], ctdReg)) {
+		return new CtdNode();
+	}
 	if (tokens.size() == 1 && regex_match(tokens[0], atomReg)) {
 		return new AtomNode(tokens[0]);
 	}
@@ -100,9 +103,4 @@ void Parser::takeOutPara(deque<string>& tokens)
 	}
 	tokens.pop_front();
 	tokens.pop_back();
-}
-
-void TreeNode::assign(string symbol, bool value)
-{
-
 }

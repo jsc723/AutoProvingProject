@@ -3,6 +3,7 @@
 class TreeNode;
 class AtomNode;
 class AnyNode;
+class CtdNode;
 class UniOpNode;
 class NotNode;
 class BiOpNode;
@@ -20,11 +21,11 @@ struct ProofLine {
 class TreeNode {
 public:
 	virtual string toString() = 0;
-	virtual bool eval() = 0;
-	virtual void assign(string symbol, bool value) = 0;
-	virtual void all_symbols(set<string> &symbols) = 0;
-	virtual bool equals(TreeNode *tree) = 0;
-	virtual bool contains(TreeNode *tree) = 0;
+	virtual bool eval() { return false; }
+	virtual void assign(string symbol, bool value) {}
+	virtual void all_symbols(set<string> &symbols) {}
+	virtual bool equals(TreeNode *tree) { return type == tree->type; }
+	virtual bool contains(TreeNode *tree) { return type == tree->type; }
 	virtual bool pgen(set<int> &dep, vector<ProofLine> &proof, int start);
 	bool helpful(vector<ProofLine> &proof) {
 		for (auto p : proof) {
@@ -87,15 +88,22 @@ public:
 	string toString() {
 		return "*";
 	}
-	void assign(string symbol, bool value) { }
-	void all_symbols(set<string> &symbols) { }
 	bool equals(TreeNode *tree) {
 		return true;
 	}
 	bool contains(TreeNode *tree) {
 		return true;
 	}
-	bool eval() { return false; }
+};
+
+class CtdNode : public TreeNode {
+public:
+	CtdNode() : TreeNode() {
+		this->type = "CtdNode";
+	}
+	string toString() {
+		return "/\\";
+	}
 };
 
 class UniOpNode : public TreeNode {

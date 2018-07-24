@@ -14,4 +14,4 @@ using namespace std;
 getline(in, line); \
 ss.clear();  ss.str(line);
 
-extern regex atomReg, cnctReg, paraReg, allReg;
+extern regex atomReg, ctdReg, cnctReg, paraReg, allReg;
