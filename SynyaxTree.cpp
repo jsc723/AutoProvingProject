@@ -2,12 +2,9 @@
 
 string ProofLine::toString(int i) {
 	stringstream ss;
-	ss << "{ ";
-	for (auto k : dep) {
-		ss << k << " ";
-	}
+	ss << "{" << TreeNode::set_to_string(dep);
 	ss << "} (" << i << ")\t\t";
-	ss << formula->toString() << "\t\t" << tag;
+	ss << formula->toString() << "\t\t" << TreeNode::vector_to_string(args) << tag;
 	return ss.str();
 }
 void ProofLine::printProof(Proof &p) {
@@ -52,7 +49,33 @@ set<int> TreeNode::substract_set(set<int>& a, set<int>& b)
 	return c;
 }
 
+string TreeNode::set_to_string(set<int>& a)
+{
+	stringstream ss;
+	for (auto i : a) {
+		ss << i << ",";
+	}
+	string s = ss.str();
+	if (s.size() > 0) {
+		s = s.substr(0, s.size() - 1);
+	}
+	return s;
+}
+string TreeNode::vector_to_string(vector<int>& a)
+{
+	stringstream ss;
+	for (auto i : a) {
+		ss << i << ",";
+	}
+	string s = ss.str();
+	if (s.size() > 0) {
+		s = s.substr(0, s.size() - 1);
+	}
+	return s;
+}
+
 int TreeNode::pgen(set<int> dep, vector<ProofLine> &proof) {
+	cout << "proving " << toString() << endl;
 	int i = find(dep, this, proof), j, k;
 	int result = -1;
 	if (i != -1) {

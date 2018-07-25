@@ -50,6 +50,8 @@ public:
 	static bool is_subset(set<int> &a, set<int> &b);
 	static set<int> union_set(set<int> &a, set<int> &b);
 	static set<int> substract_set(set<int> &a, set<int> &b);
+	static string set_to_string(set<int> &a);
+	static string vector_to_string(vector<int>& a);
 	
 };
 
@@ -204,14 +206,16 @@ public:
 		if ((k = this->TreeNode::pgen(dep, proof)) != -1) {
 			return k;
 		}
-		int i = find(dep, left, proof);
-		int j = find(dep, right, proof);
+		Proof proof_copy = proof;
+		int i = left->pgen(dep, proof);
+		int j = right->pgen(dep, proof);
 		if (i != -1 && j != -1) {
 			ProofLine p(union_set(proof[i].dep, proof[j].dep), this, "^I");
 			p.arg(i).arg(j);
 			proof.push_back(p);
 			return proof.size() - 1;
 		}
+		proof = proof_copy;
 		return -1;
 	}
 };
