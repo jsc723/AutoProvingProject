@@ -11,12 +11,23 @@ class AndOpNode;
 class OrOpNode;
 class IfOpNode;
 class EqOpNode;
+struct ProofLine;
+typedef vector<ProofLine> Proof;
 struct ProofLine {
-	set<int> dependence;
+	ProofLine(set<int> dep, TreeNode *fml, string tag) {
+		this->dep = dep;
+		this->formula = fml;
+		this->tag = tag;
+	}
+	set<int> dep;
 	//int lineNum;
 	TreeNode *formula;
 	vector<int> args;
 	string tag;
+	ProofLine &arg(int i) { args.push_back(i); return *this; }
+	string toString(int i);
+	static void printProof(Proof &p);
+	
 };
 class TreeNode {
 public:
@@ -24,9 +35,9 @@ public:
 	virtual bool eval() { return false; }
 	virtual void assign(string symbol, bool value) {}
 	virtual void all_symbols(set<string> &symbols) {}
-	virtual bool equals(TreeNode *tree) { return type == tree->type; }
+	virtual bool equals(TreeNode *tree) { return (tree->type == "AnyNode" || type == tree->type); }
 	virtual bool contains(TreeNode *tree) { return type == tree->type; }
-	virtual bool pgen(set<int> &dep, vector<ProofLine> &proof, int start);
+	virtual int pgen(set<int> dep, vector<ProofLine> &proof);
 	bool helpful(vector<ProofLine> &proof) {
 		for (auto p : proof) {
 			if (p.formula->contains(this))
@@ -38,6 +49,7 @@ public:
 	static int find(set<int> dep_most, TreeNode *formula, vector<ProofLine> proof);
 	static bool is_subset(set<int> &a, set<int> &b);
 	static set<int> union_set(set<int> &a, set<int> &b);
+	static set<int> substract_set(set<int> &a, set<int> &b);
 	
 };
 
@@ -60,6 +72,8 @@ public:
 		symbols.insert(symbol);
 	}
 	bool equals(TreeNode *tree) {
+		if (tree->type == "AnyNode")
+			return true;
 		if (tree->type == this->type) {
 			AtomNode *t = dynamic_cast<AtomNode *>(tree);
 			return t->symbol == this->symbol;
@@ -70,12 +84,6 @@ public:
 		return equals(tree);
 	}
 	bool eval() { return value; }
-	bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) {
-		if (this->TreeNode::pgen(dep, proof, start)) {
-			return true;
-		}
-		return false;
-	}
 	string symbol;
 	bool value;
 };
@@ -119,6 +127,8 @@ public:
 		child->all_symbols(symbols);
 	}
 	bool equals(TreeNode *tree) {
+		if (tree->type == "AnyNode")
+			return true;
 		if (tree->type == this->type) {
 			TreeNode *c = dynamic_cast<UniOpNode *>(tree)->child;
 			return child->equals(c);
@@ -161,6 +171,8 @@ public:
 		right->all_symbols(symbols);
 	}
 	bool equals(TreeNode *tree) {
+		if (tree->type == "AnyNode")
+			return true;
 		if (tree->type == this->type) {
 			TreeNode *cl = dynamic_cast<BiOpNode *>(tree)->left;
 			TreeNode *cr = dynamic_cast<BiOpNode *>(tree)->right;
@@ -187,23 +199,20 @@ public:
 	bool eval() {
 		return left->eval() && right->eval();
 	}
-	bool pgen(set<int> &dep, vector<ProofLine> &proof, int start) {
-		if (this->TreeNode::pgen(dep, proof, start)) {
-			return true;
+	int pgen(set<int> dep, vector<ProofLine> &proof) {
+		int k;
+		if ((k = this->TreeNode::pgen(dep, proof)) != -1) {
+			return k;
 		}
 		int i = find(dep, left, proof);
 		int j = find(dep, right, proof);
 		if (i != -1 && j != -1) {
-			ProofLine p;
-			p.dependence = union_set(proof[i].dependence, proof[j].dependence);
-			p.formula = this;
-			p.args.push_back(i);
-			p.args.push_back(j);
-			p.tag = "^I";
+			ProofLine p(union_set(proof[i].dep, proof[j].dep), this, "^I");
+			p.arg(i).arg(j);
 			proof.push_back(p);
-			return true;
+			return proof.size() - 1;
 		}
-		return false;
+		return -1;
 	}
 };
 
@@ -228,6 +237,26 @@ public:
 	}
 	bool eval() {
 		return !(left->eval() && !right->eval());
+	}
+	int pgen(set<int> dep, Proof &proof) {
+		int k;
+		if ((k = this->TreeNode::pgen(dep, proof)) != -1) {
+			return k;
+		}
+		Proof proof_copy = proof;
+		set<int> d;
+		d.insert(proof.size());
+		ProofLine asp(d, left, "ASP->");
+		proof.push_back(asp);
+		int i = proof.size() - 1, j;
+		if ((j = right->pgen(union_set(dep, d), proof)) != -1) {
+			ProofLine p(substract_set(proof[j].dep, d), this, "->I");
+			p.arg(i).arg(j);
+			proof.push_back(p);
+			return proof.size() - 1;
+		}
+		proof = proof_copy;
+		return -1;
 	}
 };
 

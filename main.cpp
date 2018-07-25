@@ -15,12 +15,11 @@ int main(int argc, char *argv[]) {
 	deque<string> tokens = Lexer::tokenlize("test.txt");
 	TreeNode *tree = Parser::parse(tokens);
 	cout << "reconstruct: \n" << tree->toString() << endl;
-	set<string> symbols;
-	tree->all_symbols(symbols);
-	for (auto i : symbols) {
-		cout << i << " " << endl;
-	}
-	cout << Solver::provable(tree, true) << endl;
+	//cout << Solver::provable(tree, true) << endl;
+	Proof proof;
+	set<int> dep;
+	tree->pgen(dep, proof);
+	ProofLine::printProof(proof);
 	system("pause");
 	return 0; 
 }
