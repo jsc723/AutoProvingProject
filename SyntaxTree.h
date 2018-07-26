@@ -36,15 +36,28 @@ public:
 	virtual void assign(string symbol, bool value) {}
 	virtual void all_symbols(set<string> &symbols) {}
 	virtual bool equals(TreeNode *tree) { return (tree->type == "AnyNode" || type == tree->type); }
-	virtual bool contains(TreeNode *tree) { return type == tree->type; }
+	virtual bool contains(TreeNode *tree, TreeNode **match = NULL) {
+		bool eq = equals(tree);
+		if (match != NULL && eq) {
+			*match = this;
+		}
+		return eq;
+	}
 	virtual int pgen(set<int> dep, vector<ProofLine> &proof);
-	bool helpful(vector<ProofLine> &proof) {
+	bool helpful(vector<ProofLine> &proof, TreeNode **match = NULL, size_t ignore_num = 0) {
 		for (auto p : proof) {
-			if (p.formula->contains(this))
-				return true;
+			if (p.formula->contains(this, match)) {
+				if (ignore_num == 0)
+					return true;
+				else {
+					*match = NULL;
+					ignore_num--;
+				}
+			}
 		}
 		return false;
 	}
+	
 	string type;
 	static int find(set<int> dep_most, TreeNode *formula, vector<ProofLine> proof);
 	static bool is_subset(set<int> &a, set<int> &b);
@@ -82,9 +95,6 @@ public:
 		}
 		return false;
 	}
-	bool contains(TreeNode *tree) {
-		return equals(tree);
-	}
 	bool eval() { return value; }
 	string symbol;
 	bool value;
@@ -101,7 +111,10 @@ public:
 	bool equals(TreeNode *tree) {
 		return true;
 	}
-	bool contains(TreeNode *tree) {
+	bool contains(TreeNode *tree, TreeNode **match = NULL) {
+		if (match != NULL) {
+			*match = this;
+		}
 		return true;
 	}
 };
@@ -137,10 +150,13 @@ public:
 		}
 		return false;
 	}
-	bool contains(TreeNode *tree) {
-		if (equals(tree))
+	bool contains(TreeNode *tree, TreeNode **match = NULL) {
+		if (equals(tree)) {
+			if (match != NULL)
+				*match = this;
 			return true;
-		return child->contains(tree);
+		}
+		return child->contains(tree, match);
 	}
 	TreeNode *child;
 	string symbol;
@@ -182,10 +198,14 @@ public:
 		}
 		return false;
 	}
-	bool contains(TreeNode *tree) {
-		if (equals(tree))
+	bool contains(TreeNode *tree, TreeNode **match = NULL) {
+		if (equals(tree)) {
+			if (match != NULL) {
+				*match = this;
+			}
 			return true;
-		return left->contains(tree) || right->contains(tree);
+		}
+		return left->contains(tree, match) || right->contains(tree, match);
 	}
 	string symbol;
 	TreeNode *left, *right;
