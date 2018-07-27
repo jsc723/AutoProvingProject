@@ -91,34 +91,48 @@ int TreeNode::pgen(set<int> dep, vector<ProofLine> &proof) {
 	}
 	TreeNode *any = new AnyNode();
 
-	TreeNode *and_left = new AndOpNode(this, any), *and_left_match = NULL;
-	TreeNode *and_right = new AndOpNode(any, this), *and_right_match = NULL;
-	if (and_left->helpful(proof, &and_left_match) && (i = and_left_match->pgen(dep, proof)) != -1
-		||and_right->helpful(proof, &and_right_match) && (i = and_right_match->pgen(dep, proof)) != -1) {
-		ProofLine p(proof[i].dep, this, "^E");
-		p.arg(i);
-		proof.push_back(p);
-		result = proof.size() - 1;
-		goto end;
-	}
-
-	TreeNode *if_node = new IfOpNode(any, this);
-	TreeNode *if_match = NULL;
-	if (if_node->helpful(proof, &if_match)) {
-		i = if_match->pgen(dep, proof);
-		if (i != -1) {
-			IfOpNode *cond = dynamic_cast<IfOpNode *>(proof[i].formula);
-			if ((j = cond->left->pgen(dep, proof)) != -1) {
-				ProofLine p(union_set(proof[i].dep, proof[j].dep), this, "->E");
-				p.arg(i).arg(j);
+	TreeNode *and_left = new AndOpNode(this, any);
+	TreeNode *and_right = new AndOpNode(any, this);
+	vector<TreeNode *> and_left_matches, and_right_matches;
+	vector<TreeNode *> if_matches;
+	if (and_left->helpful(proof, and_left_matches)) {
+		for (auto m : and_left_matches) {
+			if ((i = m->pgen(dep, proof)) != -1) {
+				ProofLine p(proof[i].dep, this, "^E");
+				p.arg(i);
 				proof.push_back(p);
-				result = proof.size() - 1;;
+				result = proof.size() - 1;
 				goto end;
 			}
 		}
 	}
-	
+	if (and_right->helpful(proof, and_right_matches)) {
+		for (auto m : and_right_matches) {
+			if ((i = m->pgen(dep, proof)) != -1) {
+				ProofLine p(proof[i].dep, this, "^E");
+				p.arg(i);
+				proof.push_back(p);
+				result = proof.size() - 1;
+				goto end;
+			}
+		}
+	}
 
+	TreeNode *if_node = new IfOpNode(any, this);
+	if (if_node->helpful(proof, if_matches)) {
+		for (auto m : if_matches) {
+			if ((i = m->pgen(dep, proof)) != -1) {
+				IfOpNode *cond = dynamic_cast<IfOpNode *>(proof[i].formula);
+				if ((j = cond->left->pgen(dep, proof)) != -1) {
+					ProofLine p(union_set(proof[i].dep, proof[j].dep), this, "->E");
+					p.arg(i).arg(j);
+					proof.push_back(p);
+					result = proof.size() - 1;;
+					goto end;
+				}
+			}
+		}
+	}
 end:
 	thinking_stack.pop_back();
 	delete and_left, and_right, if_node;

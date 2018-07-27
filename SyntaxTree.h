@@ -45,19 +45,20 @@ public:
 		}
 		return eq;
 	}
+	virtual void find_all_match(TreeNode *partten, vector<TreeNode *> &matches) {
+		if (equals(partten))
+			matches.push_back(this);
+	}
 	virtual int pgen(set<int> dep, vector<ProofLine> &proof);
-	bool helpful(vector<ProofLine> &proof, TreeNode **match = NULL, size_t ignore_num = 0) {
+	bool helpful(vector<ProofLine> &proof, vector<TreeNode *> &matches) {
+		bool result = false;
 		for (auto p : proof) {
-			if (p.formula->contains(this, match)) {
-				if (ignore_num == 0)
-					return true;
-				else {
-					*match = NULL;
-					ignore_num--;
-				}
+			if (p.formula->contains(this)) {
+				p.formula->find_all_match(this, matches);
+				result = true;
 			}
 		}
-		return false;
+		return result;
 	}
 	
 	string type;
@@ -125,6 +126,12 @@ public:
 		}
 		return true;
 	}
+	void find_all_match(TreeNode *partten, vector<TreeNode *> &matches) {
+		throw new exception("AnyNode can't call find_all_match()");
+	}
+	int pgen(set<int> dep, vector<ProofLine> &proof) {
+		throw new exception("AnyNode can't call pgen()");
+	}
 };
 
 class CtdNode : public TreeNode {
@@ -134,6 +141,9 @@ public:
 	}
 	string toString() {
 		return "/\\";
+	}
+	int pgen(set<int> dep, vector<ProofLine> &proof) {
+		
 	}
 };
 
@@ -165,6 +175,14 @@ public:
 			return true;
 		}
 		return child->contains(tree, match);
+	}
+	virtual void find_all_match(TreeNode *partten, vector<TreeNode *> &matches) {
+		if (equals(partten)) {
+			matches.push_back(this);
+		}
+		else {
+			child->find_all_match(partten, matches);
+		}
 	}
 	TreeNode *child;
 	string symbol;
@@ -214,6 +232,13 @@ public:
 			return true;
 		}
 		return left->contains(tree, match) || right->contains(tree, match);
+	}
+	virtual void find_all_match(TreeNode *partten, vector<TreeNode *> &matches) {
+		if (equals(partten)) {
+			matches.push_back(this);
+		}
+		left->find_all_match(partten, matches);
+		right->find_all_match(partten, matches);
 	}
 	string symbol;
 	TreeNode *left, *right;
