@@ -9,6 +9,7 @@
 #include <deque>
 #include <set>
 #include <typeinfo>
+#include <iomanip>
 
 using namespace std;
 #define readNewLine(in, line, ss)\

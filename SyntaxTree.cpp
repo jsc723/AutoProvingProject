@@ -2,9 +2,10 @@
 
 string ProofLine::toString(int i) {
 	stringstream ss;
-	ss << "{" << TreeNode::set_to_string(dep);
-	ss << "} (" << i << ")\t\t";
-	ss << formula->toString() << "\t\t" << TreeNode::vector_to_string(args) << tag;
+	ss << std::left << setw(15) << TreeNode::set_to_string(dep);
+	ss << setw(8) << std::left << "(" + to_string(i) + ")";
+	ss << setw(40) << std::left << formula->toString();
+	ss << setw(20)<< std::left << TreeNode::vector_to_string(args) + tag;
 	return ss.str();
 }
 void ProofLine::printProof(Proof &p) {
@@ -75,28 +76,34 @@ string TreeNode::vector_to_string(vector<int>& a)
 }
 
 int TreeNode::pgen(set<int> dep, vector<ProofLine> &proof) {
+	static vector<string> thinking_stack;
+	string pgs = pgen_arg_str(dep, proof);
+	if (std::find(thinking_stack.begin(), thinking_stack.end(), pgs) != thinking_stack.end()) {
+		return -1;
+	}
 	cout << "proving " << toString() << endl;
+	thinking_stack.push_back(pgs);
 	int i = find(dep, this, proof), j;
 	int result = -1;
 	if (i != -1) {
+		thinking_stack.pop_back();
 		return i;
 	}
 	TreeNode *any = new AnyNode();
 
-	TreeNode *and_left = new AndOpNode(this, any);
-	TreeNode *and_right = new AndOpNode(any, this);
-	if (and_left->helpful(proof) && (i = and_left->pgen(dep, proof)) != -1 ||
-		and_right->helpful(proof) && (i = and_right->pgen(dep, proof)) != -1 ) {
-		ProofLine p(proof[i].dep,this, "^E");
+	TreeNode *and_left = new AndOpNode(this, any), *and_left_match = NULL;
+	TreeNode *and_right = new AndOpNode(any, this), *and_right_match = NULL;
+	if (and_left->helpful(proof, &and_left_match) && (i = and_left_match->pgen(dep, proof)) != -1
+		||and_right->helpful(proof, &and_right_match) && (i = and_right_match->pgen(dep, proof)) != -1) {
+		ProofLine p(proof[i].dep, this, "^E");
 		p.arg(i);
 		proof.push_back(p);
 		result = proof.size() - 1;
 		goto end;
 	}
-	
 
 	TreeNode *if_node = new IfOpNode(any, this);
-	TreeNode *if_match;
+	TreeNode *if_match = NULL;
 	if (if_node->helpful(proof, &if_match)) {
 		i = if_match->pgen(dep, proof);
 		if (i != -1) {
@@ -113,7 +120,8 @@ int TreeNode::pgen(set<int> dep, vector<ProofLine> &proof) {
 	
 
 end:
+	thinking_stack.pop_back();
 	delete and_left, and_right, if_node;
-	delete any;
+	//delete any;
 	return result;
 }

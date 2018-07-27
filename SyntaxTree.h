@@ -28,6 +28,8 @@ struct ProofLine {
 	string toString(int i);
 	static void printProof(Proof &p);
 	
+	
+	
 };
 class TreeNode {
 public:
@@ -65,6 +67,12 @@ public:
 	static set<int> substract_set(set<int> &a, set<int> &b);
 	static string set_to_string(set<int> &a);
 	static string vector_to_string(vector<int>& a);
+	
+	string pgen_arg_str(set<int> &dep, vector<ProofLine> &proof) {
+		stringstream ss;
+		ss << proof.size();
+		return set_to_string(dep) + " " + this->toString() + " " + ss.str();
+	}
 	
 };
 
@@ -271,6 +279,7 @@ public:
 		set<int> d;
 		d.insert(proof.size());
 		ProofLine asp(d, left, "ASP->");
+		cout << "assuming " << left->toString() << endl;
 		proof.push_back(asp);
 		int i = proof.size() - 1, j;
 		if ((j = right->pgen(union_set(dep, d), proof)) != -1) {

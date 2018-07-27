@@ -5,6 +5,6 @@ class Lexer
 public:
 	Lexer();
 	~Lexer();
-	static deque<string> tokenlize(char src[]);
+	static vector< deque<string> >  tokenlize(char src[]);
 };
 
