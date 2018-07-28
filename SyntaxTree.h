@@ -33,6 +33,7 @@ struct ProofLine {
 };
 class TreeNode {
 public:
+	TreeNode() :neg_asp_lock(true) {}
 	virtual string toString() = 0;
 	virtual bool eval() { return false; }
 	virtual void assign(string symbol, bool value) {}
@@ -50,6 +51,7 @@ public:
 			matches.push_back(this);
 	}
 	virtual int pgen(set<int> dep, vector<ProofLine> &proof);
+	int pgen_neg_asp(set<int> dep, vector<ProofLine> &proof);
 	bool helpful(vector<ProofLine> &proof, vector<TreeNode *> &matches) {
 		bool result = false;
 		for (auto p : proof) {
@@ -62,6 +64,7 @@ public:
 	}
 	
 	string type;
+	bool neg_asp_lock;
 	static int find(set<int> dep_most, TreeNode *formula, vector<ProofLine> proof);
 	static bool is_subset(set<int> &a, set<int> &b);
 	static set<int> union_set(set<int> &a, set<int> &b);
@@ -83,6 +86,7 @@ public:
 		this->symbol = symbol;
 		this->value = false;
 		this->type = "AtomNode";
+		this->neg_asp_lock = false;
 	}
 	string toString() {
 		return symbol;
@@ -142,9 +146,7 @@ public:
 	string toString() {
 		return "/\\";
 	}
-	int pgen(set<int> dep, vector<ProofLine> &proof) {
-		
-	}
+	int pgen(set<int> dep, vector<ProofLine> &proof);
 };
 
 class UniOpNode : public TreeNode {
@@ -192,6 +194,7 @@ class NotNode : public UniOpNode {
 public:
 	NotNode(TreeNode *child) : UniOpNode(child) {
 		symbol = "!";
+		neg_asp_lock = false;
 		this->type = "NotNode";
 	}
 	bool eval() {
