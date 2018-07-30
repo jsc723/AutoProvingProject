@@ -148,8 +148,7 @@ int TreeNode::pgen(set<int> dep, vector<ProofLine> &proof) {
 		}
 	}
 
-	//if(!neg_asp_lock)
-	//	pgen_neg_asp(dep, proof);
+	pgen_neg_asp(dep, proof);
 
 
 end:
@@ -162,24 +161,35 @@ end:
 
 int TreeNode::pgen_neg_asp(set<int> dep, vector<ProofLine>& proof)
 {
+	static vector<string> neg_asp_stack;
+	if (type == "CtdNode")
+		return -1;
+	
 	Proof proof_copy = proof;
 	set<int> d; d.insert(proof.size());
 	int i = proof.size();
 	TreeNode *n = type == "NotNode" ? dynamic_cast<NotNode *>(this)->child : new NotNode(this);
-	n->neg_asp_lock = true;
+	if (std::find(neg_asp_stack.begin(), neg_asp_stack.end(), n->toString()) != neg_asp_stack.end()) {
+		return -1;
+	}
+	neg_asp_stack.push_back(n->toString());
 	cout << "asuming " << n->toString() << endl;
 	ProofLine asp(d, n, "ASP!");
 	proof.push_back(asp);
 	TreeNode *ctd = new CtdNode();
 	int j = ctd->pgen(union_set(dep, d), proof);
+
+	neg_asp_stack.pop_back();
 	if (j != -1) {
 		TreeNode *dn = new NotNode(n);
 		ProofLine p(dep, dn, "!I");
 		p.arg(i).arg(j);
 		proof.push_back(p);
+		
 		return proof.size() - 1;
 	}
 	proof = proof_copy;
+
 	return -1;
 }
 
@@ -193,7 +203,7 @@ int CtdNode::pgen(set<int> dep, vector<ProofLine> &proof) {
 		TreeNode *np = new NotNode(proof[i].formula);
 		k = np->pgen(dep, proof);
 		if (k != -1) {
-			ProofLine pline(dep, this, "!E");
+			ProofLine pline(proof[k].dep, this, "!E");
 			pline.arg(i).arg(k);
 			proof.push_back(pline);
 			return proof.size() - 1;
